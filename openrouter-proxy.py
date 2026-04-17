@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """OpenRouter proxy — converts OpenAI format to Anthropic format."""
+
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import requests as req
@@ -11,9 +12,13 @@ load_dotenv()
 app = Flask(__name__)
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_KEY", "")
-OPENROUTER_URL = os.getenv("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
+OPENROUTER_URL = os.getenv(
+    "OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions"
+)
 OPENROUTER_PORT = int(os.getenv("OPENROUTER_PORT", "4001"))
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free")
+OPENROUTER_MODEL = os.getenv(
+    "OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free"
+)
 
 
 @app.route("/v1/chat/completions", methods=["POST"])
@@ -26,8 +31,7 @@ def chat():
         data = {}
 
     model = data.get("model", OPENROUTER_MODEL)
-    # Pass the model through directly — no static map needed
-    mapped_model = model
+    mapped_model = OPENROUTER_MODEL
 
     messages = data.get("messages", [])
     # Convert Anthropic content array to string if needed
@@ -61,20 +65,28 @@ def chat():
             choice = result.get("choices", [{}])[0]
             content = choice.get("message", {}).get("content", "")
 
-            return jsonify({
-                "id": result.get("id", "msg_1"),
-                "type": "message",
-                "role": "assistant",
-                "content": [{"type": "text", "text": content}],
-                "model": model,
-                "created": result.get("created", 1234567890),
-                "stop_reason": choice.get("finish_reason", "end_turn"),
-                "usage": result.get("usage", {"input_tokens": 10, "output_tokens": 20}),
-            })
+            return jsonify(
+                {
+                    "id": result.get("id", "msg_1"),
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": content}],
+                    "model": model,
+                    "created": result.get("created", 1234567890),
+                    "stop_reason": choice.get("finish_reason", "end_turn"),
+                    "usage": result.get(
+                        "usage", {"input_tokens": 10, "output_tokens": 20}
+                    ),
+                }
+            )
         else:
-            return jsonify({"error": {"type": "invalid_request_error", "message": resp.text}}), resp.status_code
+            return jsonify(
+                {"error": {"type": "invalid_request_error", "message": resp.text}}
+            ), resp.status_code
     except Exception as e:
-        return jsonify({"error": {"type": "invalid_request_error", "message": str(e)}}), 500
+        return jsonify(
+            {"error": {"type": "invalid_request_error", "message": str(e)}}
+        ), 500
 
 
 @app.route("/")
@@ -86,13 +98,22 @@ def health():
 @app.route("/v1/models")
 @app.route("/v1/models/")
 def models():
-    return jsonify({
-        "data": [
-            {"id": OPENROUTER_MODEL, "object": "model", "created": 1234567890, "owned_by": "openrouter"},
-        ]
-    })
+    return jsonify(
+        {
+            "data": [
+                {
+                    "id": OPENROUTER_MODEL,
+                    "object": "model",
+                    "created": 1234567890,
+                    "owned_by": "openrouter",
+                },
+            ]
+        }
+    )
 
 
 if __name__ == "__main__":
-    print(f"OpenRouter proxy starting on port {OPENROUTER_PORT} (model: {OPENROUTER_MODEL})")
+    print(
+        f"OpenRouter proxy starting on port {OPENROUTER_PORT} (model: {OPENROUTER_MODEL})"
+    )
     app.run(host="0.0.0.0", port=OPENROUTER_PORT, threaded=True)
