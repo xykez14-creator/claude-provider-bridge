@@ -66,8 +66,10 @@ claude
 | Command | Description |
 |---------|-------------|
 | `python bridge.py config` | Show current configuration |
-| `python bridge.py set <key> <value>` | Update a config value |
+| `python bridge.py set <key> <value>` | Update a config value (auto-restarts proxy) |
 | `python bridge.py start` | Start all proxy servers |
+| `python bridge.py stop` | Stop all proxy servers |
+| `python bridge.py restart [provider]` | Restart proxy servers (or a specific one) |
 | `python bridge.py switch <provider>` | Configure Claude Code for a provider |
 
 ### Configurable Keys
